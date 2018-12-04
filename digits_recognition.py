@@ -166,11 +166,11 @@ def main():
     # Preprocess data.
     x_train_clean, y_train_clean, x_test_clean, pca_components = preprocess(x_train, y_train, x_test)
 
-    # logger.log('Creating heatmap of the principal components correlation...')
+    # logger.log('Creating heatmap of the preprocessed attributes principal components correlation...')
     # plotter.heatmap_correlation(pandas.DataFrame(pca_components).corr(),
     #                             'Principal components', 'Principal components', filename='heatmap_pca_corr')
 
-    # logger.log('Creating heatmap of the principal components and pixels correlation...')
+    # logger.log('Creating heatmap of the preprocessed attributes principal components and pixels correlation...')
     # plotter.heatmap_correlation(pca_components, 'Pixels', 'Principal components', filename='heatmap_pca')
 
     # Create model, fit and predict.
