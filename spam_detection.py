@@ -5,7 +5,6 @@ import helpers
 from typing import Tuple, Optional
 from sklearn import metrics
 from sklearn import preprocessing
-from sklearn.model_selection import train_test_split
 from sklearn.svm import SVC
 from sklearn.decomposition import PCA
 
@@ -20,15 +19,10 @@ def get_x_y() -> Tuple[numpy.ndarray, numpy.ndarray, numpy.ndarray, numpy.ndarra
     :return: x_train, y_train, x_test and y_test.
     """
     logger.log('Loading Dataset...')
-    dataset = helpers.datasets.load_spam()
-    x = dataset[:, :-1]
-    y = dataset[:, -1]
-    logger.log(str(len(y)) + ' data loaded')
-
-    logger.log('Splitting to 60% train and 40% test data...')
-    x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.4, stratify=y, random_state=0)
-    logger.log(str(len(y_train)) + ' training data available.')
-    logger.log(str(len(y_test)) + ' testing data available.')
+    x_train, y_train = helpers.datasets.load_spam()
+    logger.log(str(len(y_train)) + ' training data loaded')
+    x_test, y_test = helpers.datasets.load_spam(train=False)
+    logger.log(str(len(y_test)) + ' testing data loaded')
 
     return x_train, y_train, x_test, y_test
 
@@ -51,7 +45,7 @@ def preprocess(x_train: numpy.ndarray, y_train: numpy.ndarray, x_test: numpy.nda
     logger.log('Preprocessing...')
 
     logger.log('\tSymmetrize training dataset...')
-    x_train, y_train = helpers.preprocessing.symmetrize_dataset(x_train, y_train, 1100)
+    x_train, y_train = helpers.preprocessing.symmetrize_dataset(x_train, y_train)
     logger.log('\t' + str(len(y_train)) + ' training data remained')
 
     logger.log('\tScaling data using Quantile Transformer with params:')
@@ -82,7 +76,7 @@ def fit_predict(x_train: numpy.ndarray, y_train: numpy.ndarray, x_test: numpy.nd
     :return: The predicted data and the support vectors used.
     """
     logger.log('Creating model with params:')
-    model = SVC(kernel='linear', C=0.32, class_weight={0: 1, 1: 2})
+    model = SVC(kernel='linear', C=0.2, class_weight={0: 1, 1: 2})
     logger.log(model.get_params())
 
     logger.log('Fitting model...')
