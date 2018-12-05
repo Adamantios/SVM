@@ -15,7 +15,8 @@ def symmetrize_dataset(x: numpy.ndarray, y: numpy.ndarray, keep: int = None) -> 
     """
     # If keep is None, then set it with the minimum of the class instances numbers.
     if keep is None:
-        keep = min(numpy.bincount(y))
+        unique_elements, counts = numpy.unique(y, return_counts=True)
+        keep = min(counts)
 
     # Create a mask with False values, with the same shape as y.
     mask = numpy.zeros(y.shape, dtype=numpy.bool)
