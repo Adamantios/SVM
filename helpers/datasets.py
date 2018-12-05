@@ -1,8 +1,11 @@
 import numpy
+from pathlib import Path
 from typing import Tuple, List
-from pandas import read_csv
+from pandas import read_csv, DataFrame
+from sklearn.model_selection import train_test_split
 
 Labels = List[str]
+Dataset = Tuple[numpy.ndarray, numpy.ndarray]
 
 
 def _get_mnist_labels() -> Labels:
@@ -48,7 +51,7 @@ def _get_spam_labels() -> Labels:
     return names
 
 
-def load_digits(train: bool = True) -> Tuple[numpy.ndarray, numpy.ndarray]:
+def load_digits(train: bool = True) -> Dataset:
     """
     Load the mnist handwritten digits dataset
     and convert the prediction labels to odd and even numbers.
@@ -79,14 +82,67 @@ def load_digits(train: bool = True) -> Tuple[numpy.ndarray, numpy.ndarray]:
     return x, y
 
 
-def load_spam() -> numpy.ndarray:
+def database_split(db_filename: str, train_filename: str, test_filename: str) -> None:
+    """
+    Splits a csv dataset to 60% train and 40% test files, stratified.
+
+    :param db_filename: the dataset's filename.
+    :param train_filename: the train filename to be created.
+    :param test_filename: the test filename to be created.
+    """
+    # Read the dataset an get its values.
+    # Use string datatypes, so that we take the information as it is.
+    # If floats were to be used, then the labels would be converted to floats too.
+    dataset = read_csv(db_filename, dtype=numpy.str).values
+
+    # Get x and y.
+    x, y = dataset[:, :-1], dataset[:, -1]
+    # Split to train and test pairs.
+    x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.4, stratify=y, random_state=0)
+
+    # Concatenate the train and test pairs arrays into single arrays.
+    train = numpy.column_stack((x_train, y_train))
+    test = numpy.column_stack((x_test, y_test))
+
+    # Get the spam labels.
+    labels = _get_spam_labels()
+
+    # Create Dataframes from the train and test arrays and write them to a csv file.
+    DataFrame(train, columns=labels, dtype=numpy.str).to_csv(train_filename, index=False)
+    DataFrame(test, columns=labels, dtype=numpy.str).to_csv(test_filename, index=False)
+
+
+def load_spam(train: bool = True) -> Dataset:
     """
     Loads the spambase dataset.
 
+    :param train: whether to load the train or the test data.
+    If True, returns the train.
+
+    If False, returns the test.
+
+    Default value: True
+
     :return: Numpy representation of the dataset.
     """
-    filename = 'datasets/spambase.csv'
-    return read_csv(filename, names=_get_spam_labels()).values
+    # The filename of the dataset.
+    db_filename = 'datasets/spambase.csv'
+    # Create Path objects using the paths were the train and test files should be.
+    train_file = Path('datasets/spambase_train.csv')
+    test_file = Path('datasets/spambase_test.csv')
+
+    # If the files from the given paths do not exist, create them by splitting the spambase dataset.
+    if not train_file.is_file() or not test_file.is_file():
+        database_split(db_filename, train_file.absolute(), test_file.absolute())
+
+    # Create a filename based on the train value.
+    filename = train_file.absolute() if train else test_file.absolute()
+    # Read the dataset.
+    dataset = read_csv(filename).values
+    # Get x and y.
+    x, y = dataset[:, :-1], dataset[:, -1]
+
+    return x, y
 
 
 def get_email_name(class_num: int) -> str:
